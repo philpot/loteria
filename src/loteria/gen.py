@@ -1,7 +1,8 @@
 import csv
 import os
 import random
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops
+
 
 # =====================================================================
 # CONFIGURATION & ITERATIVE TUNING PARAMETERS
@@ -78,12 +79,35 @@ def load_arvo_font(font_path, size, weight=600):
         return ImageFont.load_default()
 
 
+def apply_edge_distress(alpha_channel: Image.Image, blur_radius: float = 1.8, noise_scale: int = 4) -> Image.Image:
+    """
+    Distorts ONLY the outer edges of typography while keeping the interior 100% solid black.
+    Prevents interior graying / salt-and-pepper artifacts.
+    """
+    w, h = alpha_channel.size
+
+    # 1. Blur the crisp vector mask to create a soft edge gradient
+    blurred = alpha_channel.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+    # 2. Generate coarse, organic noise (scale down then upscale for chunky fiber texture)
+    small_w, small_h = max(1, w // noise_scale), max(1, h // noise_scale)
+    noise = Image.effect_noise((small_w, small_h), sigma=128).resize((w, h), Image.Resampling.BILINEAR)
+
+    # 3. Blend noise directly into the edge gradient band
+    distorted_gradient = ImageChops.overlay(blurred, noise)
+
+    # 4. Hard Threshold: Force back to binary (0 or 255)
+    # Interior stays solid 255 black; exterior stays 0; edge becomes jagged!
+    thresholded_alpha = distorted_gradient.point(lambda p: 255 if p > 130 else 0)
+
+    return thresholded_alpha
+
 
 def create_distressed_overlay(image_size, card_number, card_label):
     """Renders typography and badge onto a distressed transparent overlay."""
     width, height = image_size
 
-    # Create transparent layer for ink drawing
+    # Render crisp vector layer
     ink_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(ink_layer)
 
@@ -91,48 +115,28 @@ def create_distressed_overlay(image_size, card_number, card_label):
     title_font = load_playfair_font(TITLE_FONT_PATH, TITLE_FONT_SIZE, weight=800)
     number_font = load_arvo_font(NUMBER_FONT_PATH, NUMBER_FONT_SIZE, weight=600)
 
-    ink_rgba = INK_COLOR + (255,)  # Solid off-black
+    ink_rgba = INK_COLOR + (255,)
 
-    # --- 1. DRAW DOUBLE-CIRCLE BADGE (Lower-Left) ---
+    # --- BADGE & NUMBER (Lower-Left) ---
     cx = BADGE_CENTER_X
     cy = height - BADGE_CENTER_Y_FROM_BOTTOM
 
-    # Outer ring
-    r_out = BADGE_OUTER_RADIUS
-    draw.ellipse([cx - r_out, cy - r_out, cx + r_out, cy + r_out],
-                 outline=ink_rgba, width=BADGE_STROKE_WIDTH)
+    r_out, r_in = BADGE_OUTER_RADIUS, BADGE_INNER_RADIUS
+    draw.ellipse([cx - r_out, cy - r_out, cx + r_out, cy + r_out], outline=ink_rgba, width=BADGE_STROKE_WIDTH)
+    draw.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], outline=ink_rgba, width=BADGE_STROKE_WIDTH)
+    draw.text((cx, cy), str(card_number), font=number_font, fill=ink_rgba, anchor="mm")
 
-    # Inner ring
-    r_in = BADGE_INNER_RADIUS
-    draw.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in],
-                 outline=ink_rgba, width=BADGE_STROKE_WIDTH)
-
-    # Card Number inside badge
-    num_str = str(card_number)
-    draw.text((cx, cy), num_str, font=number_font, fill=ink_rgba, anchor="mm")
-
-    # --- 2. DRAW CENTERED TITLE ---
+    # --- TITLE TEXT ---
+    # Shift title slightly right if badge is wide to prevent collision
     title_y = height - TITLE_CENTER_Y_FROM_BOTTOM
-    title_x = width // 2
+    title_x = (width // 2) + 20  # Added small offset to keep clear of badge
     draw.text((title_x, title_y), card_label, font=title_font, fill=ink_rgba, anchor="mm")
 
-    # --- 3. APPLY DISTRESS / AGING EFFECT ---
-    if ENABLE_DISTRESS:
-        # A. Ink Spread / Edge Bleed (Micro Gaussian Blur)
-        ink_layer = ink_layer.filter(ImageFilter.GaussianBlur(radius=INK_BLEED_BLUR))
+    # --- APPLY EDGE-ONLY DISTRESS ---
+    r, g, b, alpha = ink_layer.split()
+    distressed_alpha = apply_edge_distress(alpha, blur_radius=1.8, noise_scale=4)
 
-        # B. Letterpress Erosion (Microscopic noise chips out of the alpha channel)
-        r, g, b, alpha = ink_layer.split()
-        alpha_pixels = alpha.load()
-
-        for x in range(width):
-            for y in range(height):
-                if alpha_pixels[x, y] > 0:  # Only affect drawn ink
-                    if random.random() < NOISE_SPECKLE_DENSITY:
-                        # Reduce opacity randomly to simulate worn woodblock ink
-                        alpha_pixels[x, y] = int(alpha_pixels[x, y] * random.uniform(0.2, 0.7))
-
-        ink_layer = Image.merge("RGBA", (r, g, b, alpha))
+    ink_layer = Image.merge("RGBA", (r, g, b, distressed_alpha))
 
     return ink_layer
 
