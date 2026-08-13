@@ -1,0 +1,138 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "loteria"
+version = "0.1.0"
+description = "loteria"
+readme = "README.md"
+authors = [
+  { name = "Andrew Philpot", email = "andrew.philpot@gmail.com" }
+]
+maintainers = [
+  { name = "Andrew Philpot", email = "andrew.philpot@gmail.com" }
+]
+classifiers = [
+  # TODO: Add PyPI classifiers (Development Status, Intended Audience, etc.)
+  "License :: OSI Approved :: Apache Software License",
+]
+license = { text = "Apache-2.0" }
+dependencies = [
+  "typer",
+]
+requires-python = ">=3.10"
+
+[tool.hatch.metadata]
+# Many private projects rely on direct references for dependencies.
+# Uncomment if needed, but consider disabling for PyPI releases.
+# allow-direct-references = true
+
+# hatch run cli       # runs your CLI
+# hatch run lint      # runs ruff
+# hatch run test      # runs pytest
+# hatch run typecheck # runs mypy
+# hatch run run       # runs the package module
+
+[tool.hatch.scripts]
+# Run your CLI
+cli = "python -m loteria.cli"
+
+# Lint your package with ruff
+lint = "ruff check loteria"
+
+# Run tests with pytest
+test = "pytest"
+
+# Optional: type checking with mypy (if you ever add type hints)
+# typecheck = "mypy loteria"
+
+# Optional: run the package in editable mode
+run = "python -m loteria"
+
+[tool.hatch.version]
+path = "src/loteria/__init__.py"
+
+[tool.hatch.envs.default]
+path = ".venv"
+dependencies = [
+  "pytest",
+  "ruff",
+  # "mypy",   # prefer Ruff; enable if stricter type-checking needed
+]
+
+[tool.hatch.envs.dev]
+dependencies = [
+  "pytest",
+  "ruff",
+  # "mypy",   # keep available, but optional
+  # "black",  # redundant with Ruff
+  # "isort",
+  # "flake8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/loteria"]
+
+# Ruff (preferred linter/formatter)
+[tool.ruff]
+line-length = 78
+target-version = "py39"
+lint.select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # Pyflakes
+  "I",   # isort (import order)
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+]
+
+# Black (commented, redundant with Ruff)
+# [tool.black]
+# line-length = 78
+# target-version = ['py39']
+# skip-string-normalization = false
+
+# Isort (commented, redundant with Ruff)
+# [tool.isort]
+# profile = "black"
+# line_length = 78
+
+# Flake8 (commented, redundant with Ruff)
+# [tool.flake8]
+# max-line-length = 78
+# extend-ignore = ["E203", "W503"]
+
+# Mypy (commented, fallback for stricter type checks)
+# [tool.mypy]
+# python_version = "3.10"
+# warn_return_any = true
+# warn_unused_configs = true
+# disallow_untyped_defs = true
+# disallow_incomplete_defs = true
+# check_untyped_defs = true
+# disallow_untyped_decorators = true
+# no_implicit_optional = true
+# warn_redundant_casts = true
+# warn_unused_ignores = true
+# warn_no_return = true
+# warn_unreachable = true
+# strict_equality = true
+
+[project.optional-dependencies]
+test = [
+  "coverage",  # testing
+  "pytest",    # testing
+  "ruff",      # linting
+  # "mypy",     # type checking (optional)
+  "ipdb",      # debugging
+]
+
+[project.urls]
+bugs = "https://github.com/philpot/loteria/issues"
+changelog = "https://github.com/philpot/loteria/blob/master/CHANGELOG.md"
+homepage = "https://github.com/philpot/loteria"
+
+
+[project.scripts]
+loteria = "loteria.cli:app"
