@@ -17,10 +17,10 @@ OUTPUT_DIR = "./final_cards"         # Folder where finished cards will be saved
 # Font Configuration
 TITLE_FONT_PATH = "fonts/Clarendon Bold.otf"
 TITLE_FONT_PATH = "fonts/Clarendon Regular.otf"
-TITLE_FONT_SIZE = 150                # Base height of centered card title
+TITLE_FONT_SIZE = 175                # Base height of centered card title
 TITLE_STROKE_WIDTH = 2               # Adds extra weight/boldness to letter stems
 TITLE_CONDENSE_FACTOR = 0.85         # Squeezes text horizontally (0.85 = 15% narrower)
-TITLE_CONDENSE_FACTOR = 0.92         # Squeezes text horizontally (0.85 = 15% narrower)
+TITLE_CONDENSE_FACTOR = 0.95         # Squeezes text horizontally (0.85 = 15% narrower)
 
 NUMBER_FONT_PATH = "fonts/Arvo-Bold.ttf"
 NUMBER_FONT_SIZE = 80               # Height of card number inside badge
@@ -43,6 +43,18 @@ ENABLE_DISTRESS = True
 TEXT_BLUR_RADIUS = 2.0               # Controls depth of edge bite (Higher = rougher edges)
 TEXT_NOISE_SCALE = 3                 # Controls chunkiness of paper fiber bites
 TEXT_THRESHOLD = 125                 # Edge cut-off point (Lower = heavier ink spread)
+
+
+# Color Settings
+INK_COLOR = (30, 27, 24)             # Dark charcoal
+BADGE_BG_COLOR = (245, 240, 225)     # Matching cream paper tone (RGB)
+
+# Double-Circle Badge (Upper-Left Corner Position)
+BADGE_CENTER_X = 180                 # Horizontal offset from left edge
+BADGE_CENTER_Y = 180                 # Vertical offset from TOP edge (changed from bottom)
+BADGE_OUTER_RADIUS = 75              # Slightly smaller radius works well inside art
+BADGE_INNER_RADIUS = 63
+BADGE_STROKE_WIDTH = 4
 
 
 # =====================================================================
@@ -169,22 +181,35 @@ def create_distressed_overlay(image_size: Tuple[int, int], card_number: int, car
         distressed_text_layer = text_layer
 
     # ------------------------------------------------------------------
-    # 2. RENDER CRISP BADGE & NUMBER (Undistressed)
+    # RENDER CRISP BADGE & NUMBER (Upper-Left on top of art)
     # ------------------------------------------------------------------
     badge_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw_badge = ImageDraw.Draw(badge_layer)
 
     cx = BADGE_CENTER_X
-    cy = height - BADGE_CENTER_Y_FROM_BOTTOM
+    cy = BADGE_CENTER_Y  # Measured from TOP edge
 
-    # Outer and inner rings
     r_out, r_in = BADGE_OUTER_RADIUS, BADGE_INNER_RADIUS
-    draw_badge.ellipse([cx - r_out, cy - r_out, cx + r_out, cy + r_out], outline=ink_rgba, width=BADGE_STROKE_WIDTH)
-    draw_badge.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], outline=ink_rgba, width=BADGE_STROKE_WIDTH)
+    ink_rgba = INK_COLOR + (255,)
+    bg_rgba = BADGE_BG_COLOR + (255,)
+
+    # Outer ring WITH SOLID FILL to mask underlying artwork
+    draw_badge.ellipse(
+        [cx - r_out, cy - r_out, cx + r_out, cy + r_out],
+        fill=bg_rgba,
+        outline=ink_rgba,
+        width=BADGE_STROKE_WIDTH
+    )
+
+    # Inner ring (transparent center)
+    draw_badge.ellipse(
+        [cx - r_in, cy - r_in, cx + r_in, cy + r_in],
+        outline=ink_rgba,
+        width=BADGE_STROKE_WIDTH
+    )
 
     # Number inside badge
     draw_badge.text((cx, cy), str(card_number), font=number_font, fill=ink_rgba, anchor="mm")
-
     # ------------------------------------------------------------------
     # 3. COMBINE LAYERS
     # ------------------------------------------------------------------
