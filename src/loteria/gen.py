@@ -21,7 +21,7 @@ TITLE_STROKE_WIDTH = 2               # Adds extra weight/boldness to letter stem
 TITLE_CONDENSE_FACTOR = 0.85         # Squeezes text horizontally (0.85 = 15% narrower)
 
 NUMBER_FONT_PATH = "fonts/Arvo-Bold.ttf"
-NUMBER_FONT_SIZE = 110               # Height of card number inside badge
+NUMBER_FONT_SIZE = 80               # Height of card number inside badge
 
 # Color & Ink (Off-black carbon ink look)
 INK_COLOR = (30, 27, 24)             # Dark charcoal (R, G, B)
@@ -29,8 +29,8 @@ INK_COLOR = (30, 27, 24)             # Dark charcoal (R, G, B)
 # Double-Circle Badge (Lower-Left Corner)
 BADGE_CENTER_X = 140                 # Horizontal offset from left edge
 BADGE_CENTER_Y_FROM_BOTTOM = 200     # Vertical offset from bottom edge
-BADGE_OUTER_RADIUS = 90              # Radius of outer circle
-BADGE_INNER_RADIUS = 78              # Radius of inner circle
+BADGE_OUTER_RADIUS = 75              # Radius of outer circle
+BADGE_INNER_RADIUS = 60              # Radius of inner circle
 BADGE_STROKE_WIDTH = 4               # Ring thickness
 
 # Centered Title Position
