@@ -16,9 +16,11 @@ OUTPUT_DIR = "./final_cards"         # Folder where finished cards will be saved
 
 # Font Configuration
 TITLE_FONT_PATH = "fonts/Clarendon Bold.otf"
+TITLE_FONT_PATH = "fonts/Clarendon Regular.otf"
 TITLE_FONT_SIZE = 150                # Base height of centered card title
 TITLE_STROKE_WIDTH = 2               # Adds extra weight/boldness to letter stems
 TITLE_CONDENSE_FACTOR = 0.85         # Squeezes text horizontally (0.85 = 15% narrower)
+TITLE_CONDENSE_FACTOR = 0.92         # Squeezes text horizontally (0.85 = 15% narrower)
 
 NUMBER_FONT_PATH = "fonts/Arvo-Bold.ttf"
 NUMBER_FONT_SIZE = 80               # Height of card number inside badge
@@ -38,7 +40,7 @@ TITLE_CENTER_Y_FROM_BOTTOM = 200     # Vertical center of title text from bottom
 
 # Programmatic Distressing Controls (Text Only)
 ENABLE_DISTRESS = True
-TEXT_BLUR_RADIUS = 2.8               # Controls depth of edge bite (Higher = rougher edges)
+TEXT_BLUR_RADIUS = 2.0               # Controls depth of edge bite (Higher = rougher edges)
 TEXT_NOISE_SCALE = 3                 # Controls chunkiness of paper fiber bites
 TEXT_THRESHOLD = 125                 # Edge cut-off point (Lower = heavier ink spread)
 
@@ -144,13 +146,12 @@ def create_distressed_overlay(image_size: Tuple[int, int], card_number: int, car
         stroke_width=TITLE_STROKE_WIDTH
     )
 
-    # Calculate title center in the remaining horizontal space right of badge
-    badge_right_edge = BADGE_CENTER_X + BADGE_OUTER_RADIUS
-    remaining_space_center = badge_right_edge + ((width - badge_right_edge) // 2)
+    # Align strictly to TRUE CARD VERTICAL CENTER (width // 2)
+    title_x = width // 2
     title_y = height - TITLE_CENTER_Y_FROM_BOTTOM
 
-    # Paste title onto text layer
-    paste_x = remaining_space_center - (title_img.width // 2)
+    # Paste title onto text layer using true center coordinates
+    paste_x = title_x - (title_img.width // 2)
     paste_y = title_y - (title_img.height // 2)
     text_layer.paste(title_img, (paste_x, paste_y), title_img)
 
