@@ -12,14 +12,16 @@ CSV_PATH = "cards.csv"                 # CSV containing 'number' and 'label'
 OUTPUT_RAW_DIR = "./raw_titles"        # Raw AI outputs
 OUTPUT_CLEAN_DIR = "./transparent_titles" # Processed transparent PNGs
 
-# Multimodal Gemini Model configured for generate_content
-MODEL_NAME = "gemini-2.5-flash"        # or "gemini-2.0-flash"
+# Dedicated High-Fidelity Image Generation Model
+# MODEL_NAME = "imagen-3.0-generate-002"
+# MODEL_NAME = "models/imagen-4.0-generate-001"
+MODEL_NAME = "models/gemini-3-pro-image"
 
-# Initialize Google GenAI Client
-client = genai.Client()
+# 1. Initialize Client pointing explicitly to the v1beta endpoint (Fixes 404 Error)
+client = genai.Client(http_options={'api_version': 'v1beta'})
 
 PROMPT_TEMPLATE = """
-Generate an image containing a high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
+A high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
 
 TYPOGRAPHY & DISTRESS STYLE:
 - Style: Heavy-inked, bold Clarendon slab-serif print with authentic 19th-century hand-carved woodblock character.
@@ -43,7 +45,7 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
     new_data = []
     for item in datas:
-        # Check if pixel is close to pure white background
+        # Key out pure white background
         if item[0] > threshold and item[1] > threshold and item[2] > threshold:
             new_data.append((255, 255, 255, 0))  # Fully transparent
         else:
@@ -51,7 +53,7 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
     img.putdata(new_data)
 
-    # Crop tightly around the text glyphs
+    # Tight crop around the text
     bbox = img.getbbox()
     if bbox:
         img = img.crop(bbox)
@@ -60,11 +62,11 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
 
 def generate_title(card_number: int, label: str):
-    """Calls Gemini generate_content to produce image outputs."""
+    """Calls Imagen 3 via client.models.generate_images."""
     os.makedirs(OUTPUT_RAW_DIR, exist_ok=True)
     os.makedirs(OUTPUT_CLEAN_DIR, exist_ok=True)
 
-    raw_path = os.path.join(OUTPUT_RAW_DIR, f"{card_number:02d}_{label}.png")
+    raw_path = os.path.join(OUTPUT_RAW_DIR, f"{card_number:02d}_{label}.jpg")
     clean_path = os.path.join(OUTPUT_CLEAN_DIR, f"{card_number:02d}_{label}.png")
 
     if os.path.exists(clean_path):
@@ -76,30 +78,30 @@ def generate_title(card_number: int, label: str):
     prompt = PROMPT_TEMPLATE.format(label=label)
 
     try:
-        # Unified generate_content call
-        response = client.models.generate_content(
+        # Correct SDK method call for Imagen 3
+        result = client.models.generate_images(
             model=MODEL_NAME,
-            contents=prompt,
+            prompt=prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio="16:9",
+                output_mime_type="image/jpeg",
+            )
         )
 
-        image_bytes = None
-        # Parse inline image bytes out of response parts
-        if response.candidates and response.candidates[0].content.parts:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, "inline_data") and part.inline_data:
-                    image_bytes = part.inline_data.data
-                    break
+        if result.generated_images:
+            generated_image = result.generated_images[0]
 
-        if image_bytes:
-            image = Image.open(io.BytesIO(image_bytes))
-            image.save(raw_path, "PNG")
+            # Read image bytes
+            image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+            image.save(raw_path, "JPEG", quality=95)
 
-            # Process transparency & crop bounding box
+            # Convert to transparent PNG & crop
             transparent_img = make_transparent_and_trim(image)
             transparent_img.save(clean_path, "PNG")
             print(f"  ✓ Saved clean transparent title to {clean_path}")
         else:
-            print(f"  ❌ No inline image returned in parts for '{label}'")
+            print(f"  ❌ No image returned for '{label}'")
 
     except Exception as e:
         print(f"  ❌ Error generating '{label}': {e}")
