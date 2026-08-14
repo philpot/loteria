@@ -12,18 +12,17 @@ CSV_PATH = "cards.csv"                 # CSV containing 'number' and 'label'
 OUTPUT_RAW_DIR = "./raw_titles"        # Raw AI outputs
 OUTPUT_CLEAN_DIR = "./transparent_titles" # Processed transparent PNGs
 
-# Model Selection
-MODEL_NAME = "imagen-3.0-generate-002"
+# Multimodal Gemini Model configured for generate_content
+MODEL_NAME = "gemini-2.5-flash"        # or "gemini-2.0-flash"
 
 # Initialize Google GenAI Client
 client = genai.Client()
 
-# System prompt forcing uniform cap-height and woodblock style
 PROMPT_TEMPLATE = """
-A high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
+Generate an image containing a high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
 
 TYPOGRAPHY & DISTRESS STYLE:
-- Style: Heavy-inked, bold Clarendon slab-serif print with authentic 19th-century hand-carved woodblock character, matching the style of an antique Lotería card title.
+- Style: Heavy-inked, bold Clarendon slab-serif print with authentic 19th-century hand-carved woodblock character.
 - SIZING CONSTRAINT: All letters must maintain a UNIFORM CAP-HEIGHT and natural, uncompressed, wide letter proportions. Do NOT scale up short words to fill the image.
 - Edge Distortion: Heavy hand-carved edge wobble, variable stem thickness, organic ink bleed, and soft ink-pooled inner corners.
 - Color & Ink: 100% solid off-black carbon ink (#1E1B18).
@@ -61,11 +60,11 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
 
 def generate_title(card_number: int, label: str):
-    """Calls Imagen 3 via client.models.generate_images to generate a single title graphic."""
+    """Calls Gemini generate_content to produce image outputs."""
     os.makedirs(OUTPUT_RAW_DIR, exist_ok=True)
     os.makedirs(OUTPUT_CLEAN_DIR, exist_ok=True)
 
-    raw_path = os.path.join(OUTPUT_RAW_DIR, f"{card_number:02d}_{label}.jpg")
+    raw_path = os.path.join(OUTPUT_RAW_DIR, f"{card_number:02d}_{label}.png")
     clean_path = os.path.join(OUTPUT_CLEAN_DIR, f"{card_number:02d}_{label}.png")
 
     if os.path.exists(clean_path):
@@ -77,30 +76,30 @@ def generate_title(card_number: int, label: str):
     prompt = PROMPT_TEMPLATE.format(label=label)
 
     try:
-        # Call Imagen 3 via SDK
-        result = client.models.generate_images(
+        # Unified generate_content call
+        response = client.models.generate_content(
             model=MODEL_NAME,
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio="16:9",       # Wide canvas prevents squishing
-                output_mime_type="image/jpeg"
-            )
+            contents=prompt,
         )
 
-        if result.generated_images:
-            generated_img = result.generated_images[0]
+        image_bytes = None
+        # Parse inline image bytes out of response parts
+        if response.candidates and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, "inline_data") and part.inline_data:
+                    image_bytes = part.inline_data.data
+                    break
 
-            # Read bytes into PIL Image
-            image = Image.open(io.BytesIO(generated_img.image.image_bytes))
-            image.save(raw_path, "JPEG", quality=95)
+        if image_bytes:
+            image = Image.open(io.BytesIO(image_bytes))
+            image.save(raw_path, "PNG")
 
             # Process transparency & crop bounding box
             transparent_img = make_transparent_and_trim(image)
             transparent_img.save(clean_path, "PNG")
             print(f"  ✓ Saved clean transparent title to {clean_path}")
         else:
-            print(f"  ❌ No generated image returned for '{label}'")
+            print(f"  ❌ No inline image returned in parts for '{label}'")
 
     except Exception as e:
         print(f"  ❌ Error generating '{label}': {e}")
