@@ -11,9 +11,8 @@ from PIL import Image
 CSV_PATH = "cards.csv"                 # CSV containing 'number' and 'label'
 OUTPUT_RAW_DIR = "./raw_titles"        # Raw AI outputs
 OUTPUT_CLEAN_DIR = "./transparent_titles" # Processed transparent PNGs
-STYLE_REF_PATH = "font_style_2.png"   # Path to 'El Cine' reference image
 
-# Model Selection (imagen-3.0-generate-002 or imagen-3.0-fast-generate-001)
+# Model Selection
 MODEL_NAME = "imagen-3.0-generate-002"
 
 # Initialize Google GenAI Client
@@ -24,7 +23,7 @@ PROMPT_TEMPLATE = """
 A high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
 
 TYPOGRAPHY & DISTRESS STYLE:
-- Style: Heavy-inked, bold Clarendon slab-serif print with authentic 19th-century hand-carved woodblock character, matching the style of the reference image.
+- Style: Heavy-inked, bold Clarendon slab-serif print with authentic 19th-century hand-carved woodblock character, matching the style of an antique Lotería card title.
 - SIZING CONSTRAINT: All letters must maintain a UNIFORM CAP-HEIGHT and natural, uncompressed, wide letter proportions. Do NOT scale up short words to fill the image.
 - Edge Distortion: Heavy hand-carved edge wobble, variable stem thickness, organic ink bleed, and soft ink-pooled inner corners.
 - Color & Ink: 100% solid off-black carbon ink (#1E1B18).
@@ -62,7 +61,7 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
 
 def generate_title(card_number: int, label: str):
-    """Calls Gemini API via generate_content to generate a single title graphic."""
+    """Calls Imagen 3 via client.models.generate_images to generate a single title graphic."""
     os.makedirs(OUTPUT_RAW_DIR, exist_ok=True)
     os.makedirs(OUTPUT_CLEAN_DIR, exist_ok=True)
 
@@ -77,31 +76,23 @@ def generate_title(card_number: int, label: str):
 
     prompt = PROMPT_TEMPLATE.format(label=label)
 
-    contents = [prompt]
-    if os.path.exists(STYLE_REF_PATH):
-        ref_image = Image.open(STYLE_REF_PATH)
-        contents.append(ref_image)
-
     try:
-        # Using generate_content for unified model calls
-        response = client.models.generate_content(
+        # Call Imagen 3 via SDK
+        result = client.models.generate_images(
             model=MODEL_NAME,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                response_mime_type="image/jpeg",
+            prompt=prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio="16:9",       # Wide canvas prevents squishing
+                output_mime_type="image/jpeg"
             )
         )
 
-        # Extract image bytes from returned content parts
-        image_bytes = None
-        if response.candidates and response.candidates[0].content.parts:
-            for part in response.candidates[0].content.parts:
-                if part.inline_data and part.inline_data.data:
-                    image_bytes = part.inline_data.data
-                    break
+        if result.generated_images:
+            generated_img = result.generated_images[0]
 
-        if image_bytes:
-            image = Image.open(io.BytesIO(image_bytes))
+            # Read bytes into PIL Image
+            image = Image.open(io.BytesIO(generated_img.image.image_bytes))
             image.save(raw_path, "JPEG", quality=95)
 
             # Process transparency & crop bounding box
@@ -109,7 +100,7 @@ def generate_title(card_number: int, label: str):
             transparent_img.save(clean_path, "PNG")
             print(f"  ✓ Saved clean transparent title to {clean_path}")
         else:
-            print(f"  ❌ No image bytes returned in response for '{label}'")
+            print(f"  ❌ No generated image returned for '{label}'")
 
     except Exception as e:
         print(f"  ❌ Error generating '{label}': {e}")
