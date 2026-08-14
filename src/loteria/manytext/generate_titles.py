@@ -3,15 +3,18 @@ import io
 import os
 from google import genai
 from google.genai import types
-from PIL import Image, ImageOps
+from PIL import Image
 
 # =====================================================================
 # CONFIGURATION
 # =====================================================================
 CSV_PATH = "cards.csv"                 # CSV containing 'number' and 'label'
-OUTPUT_RAW_DIR = "./raw_titles"        # Raw JPEG AI outputs
+OUTPUT_RAW_DIR = "./raw_titles"        # Raw AI outputs
 OUTPUT_CLEAN_DIR = "./transparent_titles" # Processed transparent PNGs
 STYLE_REF_PATH = "font_style_2.png"   # Path to 'El Cine' reference image
+
+# Model Selection (imagen-3.0-generate-002 or imagen-3.0-fast-generate-001)
+MODEL_NAME = "imagen-3.0-generate-002"
 
 # Initialize Google GenAI Client
 client = genai.Client()
@@ -59,7 +62,7 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
 
 def generate_title(card_number: int, label: str):
-    """Calls Gemini Imagen API to generate a single title graphic."""
+    """Calls Gemini API via generate_content to generate a single title graphic."""
     os.makedirs(OUTPUT_RAW_DIR, exist_ok=True)
     os.makedirs(OUTPUT_CLEAN_DIR, exist_ok=True)
 
@@ -74,33 +77,39 @@ def generate_title(card_number: int, label: str):
 
     prompt = PROMPT_TEMPLATE.format(label=label)
 
-    # Load style reference image if available
     contents = [prompt]
     if os.path.exists(STYLE_REF_PATH):
         ref_image = Image.open(STYLE_REF_PATH)
         contents.append(ref_image)
 
     try:
-        # Call Imagen 3 via GenAI SDK
-        result = client.models.generate_images(
-            model='imagen-3.0-generate-002',
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio="16:9", # Wide canvas prevents horizontal squeezing
-                output_mime_type="image/jpeg",
+        # Using generate_content for unified model calls
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                response_mime_type="image/jpeg",
             )
         )
 
-        for generated_image in result.generated_images:
-            # Save raw JPEG
-            image = Image.open(io.BytesIO(generated_image.image.image_bytes))
+        # Extract image bytes from returned content parts
+        image_bytes = None
+        if response.candidates and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if part.inline_data and part.inline_data.data:
+                    image_bytes = part.inline_data.data
+                    break
+
+        if image_bytes:
+            image = Image.open(io.BytesIO(image_bytes))
             image.save(raw_path, "JPEG", quality=95)
 
             # Process transparency & crop bounding box
             transparent_img = make_transparent_and_trim(image)
             transparent_img.save(clean_path, "PNG")
             print(f"  ✓ Saved clean transparent title to {clean_path}")
+        else:
+            print(f"  ❌ No image bytes returned in response for '{label}'")
 
     except Exception as e:
         print(f"  ❌ Error generating '{label}': {e}")
