@@ -2,7 +2,6 @@ import csv
 import io
 import os
 from google import genai
-from google.genai import types
 from PIL import Image
 
 # =====================================================================
@@ -12,25 +11,24 @@ CSV_PATH = "cards.csv"                 # CSV containing 'number' and 'label'
 OUTPUT_RAW_DIR = "./raw_titles"        # Raw AI outputs
 OUTPUT_CLEAN_DIR = "./transparent_titles" # Processed transparent PNGs
 
-# Dedicated High-Fidelity Image Generation Model
-# MODEL_NAME = "imagen-3.0-generate-002"
-# MODEL_NAME = "models/imagen-4.0-generate-001"
+# Up-to-date Multimodal Pro Image Model
 MODEL_NAME = "models/gemini-3-pro-image"
 
-# 1. Initialize Client pointing explicitly to the v1beta endpoint (Fixes 404 Error)
-client = genai.Client(http_options={'api_version': 'v1beta'})
+# Initialize standard GenAI Client
+client = genai.Client()
 
 PROMPT_TEMPLATE = """
-A high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
+Generate an image featuring a high-resolution single-line vintage text graphic centered on a flat solid white (#FFFFFF) background featuring the words: "{label}"
 
 TYPOGRAPHY & DISTRESS STYLE:
 - Style: Heavy-inked, bold Clarendon slab-serif print with authentic 19th-century hand-carved woodblock character.
 - SIZING CONSTRAINT: All letters must maintain a UNIFORM CAP-HEIGHT and natural, uncompressed, wide letter proportions. Do NOT scale up short words to fill the image.
-- Edge Distortion: Heavy hand-carved edge wobble, variable stem thickness, organic ink bleed, and soft ink-pooled inner corners.
+- Edge Distortion: Heavy hand-carved edge wobble, variable stem thickness, organic ink bleed, and soft ink-pooled inner corners matching a vintage Lotería print.
 - Color & Ink: 100% solid off-black carbon ink (#1E1B18).
 
 CANVAS & LAYOUT:
 - Single horizontal line centered on a clean, pure flat solid white (#FFFFFF) background.
+- Aspect Ratio: 16:9 wide landscape canvas.
 - Zero paper texture, zero shadows, zero borders or framing lines.
 """
 
@@ -62,11 +60,11 @@ def make_transparent_and_trim(img: Image.Image, threshold: int = 230) -> Image.I
 
 
 def generate_title(card_number: int, label: str):
-    """Calls Imagen 3 via client.models.generate_images."""
+    """Calls Gemini generate_content to produce image outputs."""
     os.makedirs(OUTPUT_RAW_DIR, exist_ok=True)
     os.makedirs(OUTPUT_CLEAN_DIR, exist_ok=True)
 
-    raw_path = os.path.join(OUTPUT_RAW_DIR, f"{card_number:02d}_{label}.jpg")
+    raw_path = os.path.join(OUTPUT_RAW_DIR, f"{card_number:02d}_{label}.png")
     clean_path = os.path.join(OUTPUT_CLEAN_DIR, f"{card_number:02d}_{label}.png")
 
     if os.path.exists(clean_path):
@@ -78,30 +76,29 @@ def generate_title(card_number: int, label: str):
     prompt = PROMPT_TEMPLATE.format(label=label)
 
     try:
-        # Correct SDK method call for Imagen 3
-        result = client.models.generate_images(
+        response = client.models.generate_content(
             model=MODEL_NAME,
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio="16:9",
-                output_mime_type="image/jpeg",
-            )
+            contents=prompt,
         )
 
-        if result.generated_images:
-            generated_image = result.generated_images[0]
+        image_bytes = None
+        # Extract inline image payload from response candidates
+        if response.candidates and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, "inline_data") and part.inline_data:
+                    image_bytes = part.inline_data.data
+                    break
 
-            # Read image bytes
-            image = Image.open(io.BytesIO(generated_image.image.image_bytes))
-            image.save(raw_path, "JPEG", quality=95)
+        if image_bytes:
+            image = Image.open(io.BytesIO(image_bytes))
+            image.save(raw_path, "PNG")
 
-            # Convert to transparent PNG & crop
+            # Process transparency & crop bounding box
             transparent_img = make_transparent_and_trim(image)
             transparent_img.save(clean_path, "PNG")
             print(f"  ✓ Saved clean transparent title to {clean_path}")
         else:
-            print(f"  ❌ No image returned for '{label}'")
+            print(f"  ❌ No inline image returned in response for '{label}'")
 
     except Exception as e:
         print(f"  ❌ Error generating '{label}': {e}")

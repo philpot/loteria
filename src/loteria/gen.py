@@ -15,8 +15,10 @@ INPUT_DIR = "./raw_art"              # Folder containing AI art images
 OUTPUT_DIR = "./final_cards"         # Folder where finished cards will be saved
 
 # Font Configuration
-TITLE_FONT_PATH = "fonts/Clarendon Bold.otf"
+# TITLE_FONT_PATH = "fonts/Clarendon Bold.otf"
 TITLE_FONT_PATH = "fonts/Clarendon Regular.otf"
+TITLE_FONT_PATH = "fonts/MailartRubberstamp-Regular.ttf"
+
 TITLE_FONT_SIZE = 175                # Base height of centered card title
 TITLE_STROKE_WIDTH = 2               # Adds extra weight/boldness to letter stems
 TITLE_CONDENSE_FACTOR = 0.85         # Squeezes text horizontally (0.85 = 15% narrower)
@@ -41,7 +43,7 @@ TITLE_CENTER_Y_FROM_BOTTOM = 200     # Vertical center of title text from bottom
 # Programmatic Distressing Controls (Text Only)
 ENABLE_DISTRESS = True
 TEXT_BLUR_RADIUS = 2.0               # Controls depth of edge bite (Higher = rougher edges)
-TEXT_NOISE_SCALE = 3                 # Controls chunkiness of paper fiber bites
+TEXT_NOISE_SCALE = 5                 # Controls chunkiness of paper fiber bites
 TEXT_THRESHOLD = 125                 # Edge cut-off point (Lower = heavier ink spread)
 
 
