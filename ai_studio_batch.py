@@ -21,24 +21,41 @@ def read_labels_from_tsv(tsv_path):
 
 def generate_label(label_text, uploaded_file, args):
     """Generate a single label image"""
-    prompt = f"""A centered text graphic on a cream background.
-TEXT: "{label_text}" CRITICAL: Render the text EXACTLY as shown, preserving all capitalization and accents. Do not change case.
-CRITICAL: The ONLY text that should appear is exactly: "{label_text}"
-CRITICAL: Do NOT copy, extract, or render any text from the reference image—especially not "El Adelantado" or any other recognizable words. The reference image is ONLY for visual STYLE (texture, ink, serif curves, edge wear). Render ONLY the TEXT field above.
-CRITICAL: Render ALL characters of the text. Never truncate or omit any letters, accents, or spaces.
-CRITICAL: Do NOT render tall, narrow, stretched letters. Do NOT compress width while stretching height. Letters must maintain their natural aspect ratio.
-CRITICAL: No perspective distortion. Text must be flat and straight, not curved or barrel-warped.
-TYPOGRAPHY & STYLE:
-Clarendon slab-serif typeface, medium weight (not bold)
-Solid black ink (#1E1B18) with visible interior speckle and grain
-Rough, irregular edges with variable thickness
-Heavy ink irregularity: gaps, breaks, and worn areas throughout
-Curved serifs that appear softened by ink pooling
-Authentic vintage letterpress with obvious printing texture
-Do NOT render clean or digital-looking
-LAYOUT: - Text centered both horizontally and vertically - Text fills 35-40% of the image height - Solid cream background (#F7EEDF) - Nothing else on the canvas - No paper texture, no shadows, no frame, no borders  REFERENCE STYLE: Match the aesthetic of authentic 19th-century woodblock print typography.
-REFERENCE: Match the reference image's letterpress texture, ink pooling, serif curves,
-and edge wear. Apply only these visual attributes."""
+    prompt = f"""Render a centered text graphic.
+
+TEXT TO RENDER: "{label_text}"
+- Render EXACTLY this text, preserving all capitalization and accents
+- Do NOT change case, truncate, or omit any letters
+- This is the ONLY text that should appear in the image
+
+DO NOT COPY FROM REFERENCE: The reference image is for STYLE ONLY.
+Do NOT extract or render any text from the reference image.
+
+CANVAS: 1800px wide × 200px tall
+- Solid white background (#FFFFFF)
+- Text centered horizontally and vertically
+- Nothing else on the canvas (no padding, borders, shadows, or extra elements)
+
+TYPOGRAPHY:
+- Clarendon slab-serif typeface, medium weight (not bold)
+- Black ink (#1E1B18)
+- Visible interior speckle and grain
+- Rough, irregular edges with variable thickness
+- Heavy ink irregularity: gaps, breaks, worn areas
+- Curved serifs softened by ink pooling
+- Authentic vintage letterpress appearance
+- Do NOT render clean or digital-looking text
+
+PROPORTIONS:
+- Text should be a horizontal line, not compressed or stretched
+- Preserve natural letter proportions (each letter should have its authentic width-to-height ratio from the Clarendon font)
+- Do NOT render tall, narrow, stretched letters
+- Do NOT apply perspective distortion, barrel curves, or warping
+
+REFERENCE IMAGE:
+- Study the reference image's visual characteristics: letterpress texture, ink pooling, serif curves, edge wear
+- Apply only these VISUAL CHARACTERISTICS to your rendering
+- Do NOT copy text or modify the Clarendon font's natural proportions"""
 
     generation_config = {
         'temperature': 1,
@@ -62,7 +79,7 @@ and edge wear. Apply only these visual attributes."""
                 "text": prompt
             }
         ],
-        system_instruction='Generate authentic letterpress character with visible ink imperfections.\nInterior grain and edge irregularity are essential. Avoid clean digital typography.',
+        system_instruction='Generate authentic letterpress text with visible ink imperfections, interior grain, and edge irregularity. Match the reference image\'s visual style exactly.',
         generation_config=generation_config,
         response_modalities=['image'],
     )
@@ -70,20 +87,18 @@ and edge wear. Apply only these visual attributes."""
     # Extract and save image
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / f"{label_text.replace(' ', '_').lower()}.png"
 
+    output_files = []
     for step in interaction.steps:
         if step.type == 'model_output' and step.content:
             for part in step.content:
                 if part.type == 'image':
                     image_data = base64.b64decode(part.data)
-                    with open(output_file, 'wb') as f:
-                        f.write(image_data)
+                    output_files.append(image_data)
 
-    return interaction.usage, output_file
+    return interaction.usage, output_files
 
-REFERENCE_IMAGE = 'src/loteria/manytext/font_style_2.png'
-REFERENCE_IMAGE = 'generated_labels/el_adelantado.png'
+REFERENCE_IMAGE = 'font_style_gold.png'
 
 def main():
     parser = argparse.ArgumentParser(description='Generate distressed Lotería label images using Gemini')
@@ -96,6 +111,7 @@ def main():
     parser.add_argument('--start', type=int, default=0, help='Start index (0-based)')
     parser.add_argument('--labels', nargs='+', help='Generate only specific labels (space-separated)')
     parser.add_argument('--skip-existing', action='store_true', help='Skip labels that already have output files')
+    parser.add_argument('--variants', type=int, default=1, help='Generate N variants per label (default: 1)')
 
     args = parser.parse_args()
 
@@ -130,21 +146,36 @@ def main():
     failed_labels = []
 
     for i, label in enumerate(labels, 1):
-        output_file = Path(args.output) / f"{label.replace(' ', '_').lower()}.png"
+        label_slug = label.replace(' ', '_').lower()
 
-        if args.skip_existing and output_file.exists():
-            print(f"\n[{i}/{len(labels)}] Skipping '{label}' (exists)")
+        # Check if any variants exist
+        existing_variants = list(Path(args.output).glob(f"{label_slug}*.png"))
+        if args.skip_existing and existing_variants:
+            print(f"\n[{i}/{len(labels)}] Skipping '{label}' ({len(existing_variants)} variants exist)")
             continue
 
-        print(f"\n[{i}/{len(labels)}] Generating '{label}'...", end=" ", flush=True)
+        print(f"\n[{i}/{len(labels)}] Generating '{label}' ({args.variants} variant{'s' if args.variants > 1 else ''})...", end=" ", flush=True)
         try:
-            usage, _ = generate_label(label, uploaded_file, args)
-            print(f"OK -> {output_file}")
-            print(f"  Tokens: {usage.total_input_tokens} in + {usage.total_output_tokens} out")
+            variant_count = 0
+            for v in range(args.variants):
+                usage, image_data_list = generate_label(label, uploaded_file, args)
 
-            total_input_tokens += usage.total_input_tokens
-            total_output_tokens += usage.total_output_tokens
-            total_tokens += usage.total_tokens
+                # Save each image from this API call
+                for image_data in image_data_list:
+                    variant_count += 1
+                    if args.variants > 1:
+                        output_file = Path(args.output) / f"{label_slug}_v{variant_count}.png"
+                    else:
+                        output_file = Path(args.output) / f"{label_slug}.png"
+
+                    with open(output_file, 'wb') as f:
+                        f.write(image_data)
+
+                    total_input_tokens += usage.total_input_tokens
+                    total_output_tokens += usage.total_output_tokens
+                    total_tokens += usage.total_tokens
+
+            print(f"OK -> {variant_count} file(s)")
         except Exception as e:
             print(f"FAIL: {e}")
             failed_labels.append(label)
