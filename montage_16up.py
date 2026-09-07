@@ -59,34 +59,35 @@ def create_montage_16up(card_paths, background_color, output_path, tabla_num, ve
 
         montage.paste(card, (x, y))
 
-    # Add three-part footer
-    draw = ImageDraw.Draw(montage)
-    footer_y = montage_height - FOOTER_HEIGHT + 20
+    # Add footer (unless suppressed)
+    if tabla_num != 0 and version != "0.0":
+        draw = ImageDraw.Draw(montage)
+        footer_y = montage_height - FOOTER_HEIGHT + 20
 
-    # Load font (36pt for all footer elements)
-    try:
-        footer_font = ImageFont.truetype("fonts/Arvo-Bold.ttf", 36)
-    except:
-        footer_font = ImageFont.load_default()
+        # Load font (36pt for all footer elements)
+        try:
+            footer_font = ImageFont.truetype("fonts/Arvo-Bold.ttf", 36)
+        except:
+            footer_font = ImageFont.load_default()
 
-    # A. Left: TABLA NN
-    tabla_text = f"TABLA {tabla_num:02d}"
-    draw.text((MARGIN, footer_y), tabla_text, font=footer_font, fill=(0, 0, 0))
+        # A. Left: TABLA NN
+        tabla_text = f"TABLA {tabla_num:02d}"
+        draw.text((MARGIN, footer_y), tabla_text, font=footer_font, fill=(0, 0, 0))
 
-    # B. Center: Copyright info
-    copyright_text = "© 2026 Vecinos de South Pasadena"
-    bbox = draw.textbbox((0, 0), copyright_text, font=footer_font)
-    text_width = bbox[2] - bbox[0]
-    center_x = (montage_width - text_width) // 2
-    draw.text((center_x, footer_y), copyright_text, font=footer_font, fill=(0, 0, 0))
+        # B. Center: Copyright info
+        copyright_text = "© 2026 Vecinos de South Pasadena"
+        bbox = draw.textbbox((0, 0), copyright_text, font=footer_font)
+        text_width = bbox[2] - bbox[0]
+        center_x = (montage_width - text_width) // 2
+        draw.text((center_x, footer_y), copyright_text, font=footer_font, fill=(0, 0, 0))
 
-    # C. Right: Metadata (36pt)
-    card_dir = Path(card_paths[0]).parent.name if card_paths else "?"
-    metadata_text = f"V={version} N={n_cards} R={run_id} Dir={card_dir} BG={background_color}"
-    bbox = draw.textbbox((0, 0), metadata_text, font=footer_font)
-    text_width = bbox[2] - bbox[0]
-    right_x = montage_width - MARGIN - text_width
-    draw.text((right_x, footer_y + 5), metadata_text, font=footer_font, fill=(64, 64, 64))
+        # C. Right: Metadata (36pt)
+        card_dir = Path(card_paths[0]).parent.name if card_paths else "?"
+        metadata_text = f"V={version} N={n_cards} R={run_id} Dir={card_dir} BG={background_color}"
+        bbox = draw.textbbox((0, 0), metadata_text, font=footer_font)
+        text_width = bbox[2] - bbox[0]
+        right_x = montage_width - MARGIN - text_width
+        draw.text((right_x, footer_y + 5), metadata_text, font=footer_font, fill=(64, 64, 64))
 
     # Save
     montage.save(output_path)
