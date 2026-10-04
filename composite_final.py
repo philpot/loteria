@@ -156,7 +156,7 @@ def draw_badge(canvas, number, x, y, color=BADGE_COLOR, bg_color=None):
     draw.text((x, y), str(number), font=font, fill=color + (255,), anchor="mm")
 
 
-def composite_card(texture_path, art_path, label_path, number, seed, trim_threshold=220, badge_inset=8, shield_bg=None):
+def composite_card(texture_path, art_path, label_text, number, seed, trim_threshold=220, badge_inset=8, shield_bg=None):
     """
     Composite one card:
     1. Crop random rectangle from aged paper texture (for background)
@@ -252,22 +252,29 @@ def composite_card(texture_path, art_path, label_path, number, seed, trim_thresh
     badge_y = art_y + BADGE_OUTER_RADIUS + badge_inset
     draw_badge(canvas, number, badge_x, badge_y, bg_color=shield_bg)
 
-    # Load and composite label (with scaling)
-    if label_path and os.path.exists(label_path):
-        label = Image.open(label_path).convert("RGBA")
+    # Draw label text in bottom area (simple, no pre-generated PNGs)
+    if label_text:
+        # Find a suitable font (use default if not available)
+        try:
+            label_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 56)
+        except:
+            try:
+                label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
+            except:
+                label_font = ImageFont.load_default()
 
-        # Scale label (all labels saved at 200px height; scale so longest fits)
-        # Scale factor is passed in or calculated globally
-        if hasattr(composite_card, 'label_scale'):
-            scale = composite_card.label_scale
-            new_width = int(label.width * scale)
-            new_height = int(label.height * scale)
-            label = label.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        # Draw text centered in bottom area
+        label_area_top = art_bottom + 30
+        label_area_height = CARD_HEIGHT - label_area_top - 30
+        label_y = label_area_top + (label_area_height - 56) // 2
 
-        # Center label horizontally in the bottom area
-        label_y = art_bottom + (CARD_HEIGHT - art_bottom - label.height) // 2
-        label_x = (CARD_WIDTH - label.width) // 2
-        canvas.alpha_composite(label, (label_x, label_y))
+        # Measure text to center horizontally
+        bbox = draw.textbbox((0, 0), label_text, font=label_font)
+        text_width = bbox[2] - bbox[0]
+        label_x = (CARD_WIDTH - text_width) // 2
+
+        # Draw text in black
+        draw.text((label_x, label_y), label_text, fill=(0, 0, 0, 255), font=label_font)
 
     return canvas
 
@@ -362,7 +369,6 @@ def main(args):
 
         art_path = os.path.join(args.art_dir, art_filename)
         label_filename = label_filename_from_text(label_text)
-        label_path = os.path.join(args.labels_dir, label_filename)
 
         if not os.path.exists(art_path):
             print(f"  [SKIP] {number:02d} {label_text:30s} (art not found)")
@@ -370,7 +376,7 @@ def main(args):
 
         try:
             card_img = composite_card(
-                texture_path, art_path, label_path, number, seed + number,
+                texture_path, art_path, label_text, number, seed + number,
                 args.trim_threshold, args.badge_inset, shield_bg
             )
             output_path = os.path.join(args.output, f"{number:02d}_{label_filename}")
