@@ -59,7 +59,7 @@ python pngs_to_pdf.py 16up_white_on_ivory/tabla01.png --fit-to-page letter -o 16
 
 ### To generate cards (36-card jr deck)
 
-uv run composite_final.py --csv jr36_composite_cards.tsv --art-dir /Users/Andrew/Documents/loteria/jrlot01 --output jr36_white --background-color 'white' --card-border-width 4 --art-border-width 4
+uv run composite_final.py --csv jr36_composite_cards.tsv --art-dir ../loteria/jrlot01 --output jr36_white --background-color 'white' --card-border-width 4 --art-border-width 4
 
 ### To generate die cut cards (36-card, no tablas)
 
