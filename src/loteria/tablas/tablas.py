@@ -130,8 +130,8 @@ def optimize_tablas(tablas: list[list[int]], max_iterations: int = 50000) -> lis
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate optimized Lotería tablas")
     parser.add_argument(
-        "-N", "--cards", type=int, choices=[54, 56], default=56,
-        help="Number of cards in deck (default: 56)"
+        "-N", "--cards", type=int, choices=[36, 54, 56], default=56,
+        help="Number of cards in deck (default: 56, options: 36 for jr, 54, 56)"
     )
     parser.add_argument(
         "-K", "--tablas", type=int, default=50,
