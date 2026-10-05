@@ -1,6 +1,6 @@
 number	label	image_filename	shield_bg
-01	La Araña	araña/jr.jpeg
-02	El Arpa	arpa/jr.jpeg
+01	La Araña	araña/jr.jpeg	#FCF7D5
+02	El Arpa	arpa/jr.jpeg	#E2AD76
 03	La Bailadora	bailadora/jr.jpeg
 04	La Bandera	bandera/jr.jpeg
 05	La Calavera	calavera/jr.jpeg
@@ -12,7 +12,7 @@ number	label	image_filename	shield_bg
 11	La Guitarra	guitarra/jr.jpeg
 12	La Luna	luna/jr.jpeg	#F8EFD9
 13	La Mano	mano/jr.jpeg
-14	El Monarca	monarca/jr.jpeg
+14	La Monarca	monarca/jr.jpeg
 15	El Mundo	mundo/jr.jpeg
 16	El Músico	músico/jr.jpeg
 17	La Naranja	naranja/jr.jpeg

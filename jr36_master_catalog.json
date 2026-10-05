@@ -18,7 +18,7 @@
     {"number": "11", "folder": "guitarra", "label": "La Guitarra", "image_path": "guitarra/jr.jpeg"},
     {"number": "12", "folder": "luna", "label": "La Luna", "image_path": "luna/jr.jpeg"},
     {"number": "13", "folder": "mano", "label": "La Mano", "image_path": "mano/jr.jpeg"},
-    {"number": "14", "folder": "monarca", "label": "El Monarca", "image_path": "monarca/jr.jpeg"},
+    {"number": "14", "folder": "monarca", "label": "La Monarca", "image_path": "monarca/jr.jpeg"},
     {"number": "15", "folder": "mundo", "label": "El Mundo", "image_path": "mundo/jr.jpeg"},
     {"number": "16", "folder": "músico", "label": "El Músico", "image_path": "músico/jr.jpeg"},
     {"number": "17", "folder": "naranja", "label": "La Naranja", "image_path": "naranja/jr.jpeg"},

@@ -200,7 +200,7 @@ def composite_card(texture_path, art_path, label_text, number, seed, trim_thresh
 
     # Load and resize art to fit
     art = Image.open(art_path).convert("RGBA")
-    # Trim disabled: source JPEGs are already manually cleaned
+    # Trim disabled: art should be manually cleaned before compositing
     # art = trim_white_edges(art, trim_threshold)
 
     # Scale to fit width, then crop excess height equally from top/bottom
