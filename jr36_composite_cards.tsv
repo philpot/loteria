@@ -6,11 +6,11 @@ number	label	image_filename	shield_bg
 05	La Calavera	calavera/jr.jpeg
 06	El Cempasúchil	cempasúchil/jr.jpeg
 07	La Dama	dama/jr.jpeg
-08	La Estatua	estatua/jr.jpeg
-09	La Estrella	estrella/jr.jpeg
+08	La Estatua	estatua/jr.jpeg	#FBEFD3
+09	La Estrella	estrella/jr.jpeg	#F9D949
 10	El Gallo	gallo/jr.jpeg
 11	La Guitarra	guitarra/jr.jpeg
-12	La Luna	luna/jr.jpeg
+12	La Luna	luna/jr.jpeg	#F8EFD9
 13	La Mano	mano/jr.jpeg
 14	El Monarca	monarca/jr.jpeg
 15	El Mundo	mundo/jr.jpeg
@@ -19,19 +19,19 @@ number	label	image_filename	shield_bg
 18	El Nopal	nopal/jr.jpeg
 19	La Ofrenda	ofrenda/jr.jpeg
 20	El Pájaro	pájaro/jr.jpeg
-21	Papel Picado	papel_picado/jr.jpeg
-22	El Paraguas	paraguas/jr.jpeg
+21	El Papel Picado	papel_picado/jr.jpeg	#F6F2E7
+22	El Paraguas	paraguas/jr.jpeg	#E68E3B
 23	La Pera	pera/jr.jpeg
 24	El Pescado	pescado/jr.jpeg
-25	La Piñata	piñata/jr.jpeg
+25	La Piñata	piñata/jr.jpeg	#FAE9D5
 26	El Pino	pino/jr.jpeg
 27	El Puente	puente/jr.jpeg
 28	La Rana	rana/jr.jpeg
 29	La Rosa	rosa/jr.jpeg
-30	La Sandía	sandía/jr.jpeg
-31	El Sol	sol/jr.jpeg
+30	La Sandía	sandía/jr.jpeg	#E83D80
+31	El Sol	sol/jr.jpeg	#F6CC45
 32	La Sonaja	sonaja/jr.jpeg
 33	El Tambor	tambor/jr.jpeg
 34	El Tren	tren/jr.jpeg
 35	La Vela	vela/jr.jpeg
-36	Los Zapatos	zapatos/jr.jpeg
+36	Los Zapatos	zapatos/jr.jpeg	#F8F3DE

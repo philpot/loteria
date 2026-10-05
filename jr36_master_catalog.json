@@ -25,7 +25,7 @@
     {"number": "18", "folder": "nopal", "label": "El Nopal", "image_path": "nopal/jr.jpeg"},
     {"number": "19", "folder": "ofrenda", "label": "La Ofrenda", "image_path": "ofrenda/jr.jpeg"},
     {"number": "20", "folder": "pájaro", "label": "El Pájaro", "image_path": "pájaro/jr.jpeg"},
-    {"number": "21", "folder": "papel_picado", "label": "Papel Picado", "image_path": "papel_picado/jr.jpeg"},
+    {"number": "21", "folder": "papel_picado", "label": "El Papel Picado", "image_path": "papel_picado/jr.jpeg"},
     {"number": "22", "folder": "paraguas", "label": "El Paraguas", "image_path": "paraguas/jr.jpeg"},
     {"number": "23", "folder": "pera", "label": "La Pera", "image_path": "pera/jr.jpeg"},
     {"number": "24", "folder": "pescado", "label": "El Pescado", "image_path": "pescado/jr.jpeg"},
