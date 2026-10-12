@@ -42,9 +42,10 @@ done
 
 **Output:**
 - `white/` — 56 composite cards
-- `16up_white_on_ivory/` — 50 tablas (PNG + PDF)
-- `16up_white_on_ivory/all_tablas.pdf` — Combined tablas PDF
-- `dealer_deck_56/` — 7 dealer sheets (PNG + PDF), 54 cards total
+- `16up_white_on_ivory/` — 50 individual tabla PDFs
+- `16up_white_on_ivory/all_tablas.pdf` — Single concatenated PDF (all 50 tablas)
+- `dealer_deck_56/` — 7 individual dealer sheet PDFs
+- `dealer_deck_56/all_dealer_sheets.pdf` — Single concatenated PDF (all 7 sheets)
 - `poster_output/poster_56_transparent.pdf` — Poster PDF (transparent background)
 
 ### Regenerate 36-card junior deck (jr36)
