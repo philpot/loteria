@@ -33,10 +33,10 @@ result = subprocess.run(cmd_str, shell=True, capture_output=True, text=True)
 if result.returncode == 0:
     print("✓ all_tablas.pdf (50 tablas combined)")
 
-# Combine all dealer sheets into one PDF
+# Combine all dealer sheets into one PDF (from PNG sources, not PDFs)
 print("\nCombining all dealer sheets into single PDF...")
-sheets = sorted(Path("dealer_deck_56").glob("sheet_??.pdf"))
-sheets_list = " ".join(str(s) for s in sheets)
+sheets_png = sorted(Path("dealer_deck_56").glob("sheet_??.png"))
+sheets_list = " ".join(str(s) for s in sheets_png)
 cmd_str = f"uv run python pngs_to_pdf.py -o dealer_deck_56/all_dealer_sheets.pdf {sheets_list}"
 result = subprocess.run(cmd_str, shell=True, capture_output=True, text=True)
 if result.returncode == 0:
