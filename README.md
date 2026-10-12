@@ -13,6 +13,47 @@ loteria
 
 * TODO
 
+## Workflows
+
+### Regenerate 56-card deck (standard Lotería)
+
+When source art in `fully_cropped_art/` is updated:
+
+```bash
+# Step 1: Generate composite cards
+uv run composite_final.py --csv composite_cards.tsv --art-dir fully_cropped_art \
+  --output white --background-color white --card-border-width 4 --art-border-width 4
+
+# Step 2: Generate montages/tablas (optional)
+bash generate_tablas_56.sh
+bash generate_poster.sh
+
+# Step 3: Convert to PDF
+uv run python pngs_to_pdf.py poster_output/poster_56_transparent.png -o poster_output/poster_56_transparent.pdf
+```
+
+### Regenerate 36-card junior deck (jr36)
+
+On branch `jr-36-final-pipeline`:
+
+```bash
+# Generate composites with on-the-fly labels
+uv run composite_final.py --csv jr36_composite_cards.tsv --art-dir ../../loteria/jrlot01 \
+  --output jr36_white --background-color white --card-border-width 4 --art-border-width 4
+
+# Generate tablas and dealer deck
+bash generate_jr36_tablas.sh
+bash generate_jr36_dealer_deck.sh
+
+# Generate PDFs
+python3 << 'PY'
+import subprocess
+from pathlib import Path
+for f in sorted(Path("jr36_white_on_ivory").glob("tabla??.png")) + sorted(Path("jr36_white_on_ivory").glob("dealer_sheet_??.png")):
+  subprocess.run(["uv", "run", "python", "pngs_to_pdf.py", str(f), "--fit-to-page", "letter", "-o", str(f.with_suffix(".pdf"))], capture_output=True)
+PY
+```
+
 ## Credits
 
 This package was created with [Cookiecutter](https://github.com/audreyfeldroy/cookiecutter) and the [audreyfeldroy/cookiecutter-pypackage](https://github.com/audreyfeldroy/cookiecutter-pypackage) project template.
