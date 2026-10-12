@@ -24,13 +24,28 @@ When source art in `fully_cropped_art/` is updated:
 uv run composite_final.py --csv composite_cards.tsv --art-dir fully_cropped_art \
   --output white --background-color white --card-border-width 4 --art-border-width 4
 
-# Step 2: Generate montages/tablas (optional)
-bash generate_tablas_56.sh
+# Step 2: Generate all 50 tablas from pre-defined layouts (src/loteria/tablas/loteria_matrices.json)
+bash generate_all_tablas_56.sh
+
+# Step 3: Generate poster (56 cards, 7×8 grid, transparent background)
 bash generate_poster.sh
 
-# Step 3: Convert to PDF
-uv run python pngs_to_pdf.py poster_output/poster_56_transparent.png -o poster_output/poster_56_transparent.pdf
+# Step 4: Generate dealer deck (7 sheets of 9 cards per letter page)
+bash generate_dealer_deck_56.sh
+
+# Step 5: Convert all to PDF
+bash generate_all_pdfs_56.sh
+for sheet in dealer_deck_56/sheet_*.png; do
+  uv run python pngs_to_pdf.py "$sheet" --fit-to-page letter -o "${sheet%.png}.pdf"
+done
 ```
+
+**Output:**
+- `white/` — 56 composite cards
+- `16up_white_on_ivory/` — 50 tablas (PNG + PDF)
+- `16up_white_on_ivory/all_tablas.pdf` — Combined tablas PDF
+- `dealer_deck_56/` — 7 dealer sheets (PNG + PDF), 54 cards total
+- `poster_output/poster_56_transparent.pdf` — Poster PDF (transparent background)
 
 ### Regenerate 36-card junior deck (jr36)
 
