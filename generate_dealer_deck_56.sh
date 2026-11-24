@@ -3,7 +3,7 @@
 # Generate dealer deck for 56-card deck
 # 9 cards per sheet (3×3 grid), 56 cards = 7 sheets (6 full + 1 partial)
 
-mkdir -p dealer_deck_56
+mkdir -p builds/loteria-56/dealer_deck
 
 python3 << 'PYTHON'
 import subprocess
@@ -24,14 +24,14 @@ print("Generating dealer deck sheets (9 cards per sheet)...\n")
 for sheet_num, card_list in sheets:
     cmd = [
         "uv", "run", "python", "montage_9up.py",
-        "--card-dir", "white",
+        "--card-dir", "builds/loteria-56/white",
         "--background-color", "#FFFFF0",
         "-T", "0",
         "-V", "0.0",
         "-N", "56",
         "-R", "42",
         "--mode", "tabla",
-        "-o", f"dealer_deck_56/sheet_{sheet_num}.png",
+        "-o", f"builds/loteria-56/dealer_deck/sheet_{sheet_num}.png",
         "--card-list", card_list
     ]
 
@@ -41,5 +41,5 @@ for sheet_num, card_list in sheets:
     else:
         print(f"✗ sheet_{sheet_num}.png - {result.stderr}")
 
-print(f"\nGenerated dealer deck in dealer_deck_56/")
+print(f"\nGenerated dealer deck in builds/loteria-56/dealer_deck/")
 PYTHON

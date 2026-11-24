@@ -5,15 +5,15 @@
 # Margins: 35px (left), 35px (top), 35px (bottom)
 # Target: portrait aspect ratio ~0.6 (fits 24"×36")
 
-mkdir -p poster_output
+mkdir -p builds/loteria-56/poster
 
 # Poster with transparent background (for layering)
 uv run python poster_56up.py \
-  --card-dir white \
+  --card-dir builds/loteria-56/white \
   --background-color transparent \
   --hs 70 \
   --vs 70 \
   --title-height 1050 \
-  -o poster_output/poster_56_transparent.png
+  -o builds/loteria-56/poster/poster_56_transparent.png
 
-echo "Generated poster in poster_output/"
+echo "Generated poster in builds/loteria-56/poster/"
