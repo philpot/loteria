@@ -10,7 +10,6 @@ number	label	image_filename	shield_bg
 55	El Cempasúchil	cempasúchil.jpeg
 47	El Centinela	centinela.jpeg
 18	El Cine	cine.jpeg	#95B4C1
-30	El Cofre	cofre.jpeg	#F9DBC5
 11	El Correcaminos	correcaminos.jpeg
 24	El Cotorro	cotorro.jpeg
 7	El Coyote	coyote.jpeg	#F1A9A4
@@ -43,6 +42,7 @@ number	label	image_filename	shield_bg
 29	La Escuela	escuela.jpeg	#C1714D
 35	La Estrella	estrella.jpeg	#BE9692
 36	La Fiesta	fiesta.jpeg	#E1BBAD
+30	La Juguetería	juguetería.jpeg	#F9DBC5
 38	La Lonchería	lonchería.jpeg	#DFE9E3
 23	La Luna	luna.jpeg
 52	La Maceta	maceta.jpeg	#EED7CB
