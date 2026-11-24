@@ -320,12 +320,12 @@
   },
   {
     "num": 30,
-    "spanish": "el cofre",
-    "slug": "cofre",
-    "english": "the toy chest",
-    "sp_verse": "El juguete de ayer, el sueño de hoy, // abre el cofre — aquí estoy.",
+    "spanish": "la juguetería",
+    "slug": "juguetería",
+    "english": "Dinosaur Farm",
+    "sp_verse": "El juguete de ayer, el sueño de hoy, // en la juguetería, aquí estoy.",
     "en_verse": "Toyland, Toyland, // little girl and boy land.",
-    "image": "thumbs/cofre.jpeg",
+    "image": "thumbs/juguetería.jpeg",
     "img_w": 260,
     "img_h": 388
   },
