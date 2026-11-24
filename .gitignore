@@ -218,3 +218,25 @@ sqlite/*
 .aws-sam/
 .env
 .env.example
+
+# Loteria: generated output, candidates, and scratch
+# Rebuildable outputs and unaccepted candidates; see .local/reorg/plan.md
+builds/
+inbox/
+.local/
+dfe_*/
+dealer_deck_56/
+16up_*/
+jr36_*/
+poster_output/
+composed_cards/
+final_composite*/
+border_*/
+white/
+white.*/
+wheat/
+wheat.*/
+generated_labels*/
+*.bak
+*~
+.DS_Store
