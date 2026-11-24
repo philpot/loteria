@@ -240,3 +240,8 @@ generated_labels*/
 *.bak
 *~
 .DS_Store
+
+# Superseded assets and configs kept on disk only (see .local/reorg/plan.md)
+obs/art/
+obs/configs/
+obs/generated/
